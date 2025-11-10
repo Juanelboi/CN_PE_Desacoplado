@@ -203,7 +203,7 @@
         // GET ONE
         document.getElementById('formGet').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const id = document.getElementById('getId').value; 
+            const id = document.getElementById('getId').value;
             const API_URL = `${getApiBaseUrl()}/athletes/${id}`; 
             const headers = getHeaders(); 
             if (!API_URL || !headers) return;
@@ -234,7 +234,7 @@
         // UPDATE
         document.getElementById('formUpdate').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const id = document.getElementById('updateId').value; 
+            const id = document.getElementById('updateId').value;
             const API_URL = `${getApiBaseUrl()}/athletes/${id}`; 
             const headers = getHeaders(); 
             if (!API_URL || !headers) return;
@@ -274,7 +274,7 @@
         // DELETE
         document.getElementById('formDelete').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const id = document.getElementById('deleteId').value; 
+            const id = document.getElementById('deleteId').value;
             const API_URL = `${getApiBaseUrl()}/athletes/${id}`; 
             const headers = getHeaders(); 
             if (!API_URL || !headers) return;

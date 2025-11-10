@@ -21,19 +21,18 @@ class DynamoDBDatabase(Database):
             if e.response['Error']['Code'] == 'ResourceNotFoundException':
                 # La tabla no existe, crearla
                 print(f"Creando tabla DynamoDB '{self.table_name}'...")
-                # Create table using Number as primary key (numeric)
                 table = self.dynamodb.create_table(
                     TableName=self.table_name,
                     KeySchema=[
                         {
-                            'AttributeName': 'Number',
+                            'AttributeName': 'athlete_id',
                             'KeyType': 'HASH'
                         }
                     ],
                     AttributeDefinitions=[
                         {
-                            'AttributeName': 'Number',
-                            'AttributeType': 'N'
+                            'AttributeName': 'athlete_id',
+                            'AttributeType': 'S'
                         }
                     ],
                     BillingMode='PAY_PER_REQUEST'
@@ -50,8 +49,8 @@ class DynamoDBDatabase(Database):
         self.table.put_item(Item=athlete.model_dump())
         return athlete
     
-    def get_athlete(self, athlete_number: int) -> Optional[Athlete]:
-        response = self.table.get_item(Key={'Number': athlete_number})
+    def get_athlete(self, athlete_id: str) -> Optional[Athlete]:
+        response = self.table.get_item(Key={'athlete_id': athlete_id})
         if 'Item' in response:
             return Athlete(**response['Item'])
         return None
@@ -61,15 +60,15 @@ class DynamoDBDatabase(Database):
         athletes = [Athlete(**item) for item in response.get('Items', [])]
         return sorted(athletes, key=lambda x: x.Number)
     
-    def update_athlete(self, athlete_number: int, athlete: Athlete) -> Optional[Athlete]:
+    def update_athlete(self, athlete_id: str, athlete: Athlete) -> Optional[Athlete]:
         athlete.update_timestamp()
-        athlete.Number = athlete_number
+        athlete.athlete_id = athlete_id
         self.table.put_item(Item=athlete.model_dump())
         return athlete
     
-    def delete_athlete(self, athlete_number: int) -> bool:
+    def delete_athlete(self, athlete_id: str) -> bool:
         response = self.table.delete_item(
-            Key={'Number': athlete_number},
+            Key={'athlete_id': athlete_id},
             ReturnValues='ALL_OLD'
         )
         return 'Attributes' in response

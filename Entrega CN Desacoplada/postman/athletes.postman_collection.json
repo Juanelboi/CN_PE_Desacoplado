@@ -15,7 +15,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"Name\": \"Juan\",\n  \"Surname\": \"Perez\",\n  \"trial\": [\"sprint\"],\n  \"distance\": \"100m\",\n  \"Phase\": \"Qualifiers\",\n  \"Number\": 7\n}"
+          "raw": "{\n  \"Number\": 7,\n  \"Name\": \"Juan\",\n  \"Surname\": \"Perez\",\n  \"trial\": [\"sprint\"],\n  \"distance\": \"100m\",\n  \"Phase\": \"Qualifiers\"\n}"
         },
         "url": {
           "raw": "{{base_url}}/athletes",
@@ -30,8 +30,8 @@
             "exec": [
               "pm.test('Status code is 201', function () {pm.response.to.have.status(201);});",
               "const json = pm.response.json();",
-              "pm.test('Response has athlete_id', function () {pm.expect(json).to.have.property('athlete_id');});",
-              "if (json.athlete_id) { pm.environment.set('created_athlete_id', json.athlete_id); }"
+              "pm.test('Response has Number', function () {pm.expect(json).to.have.property('Number');});",
+              "if (json.Number) { pm.environment.set('created_athlete_number', json.Number); }"
             ]
           }
         }
@@ -70,11 +70,11 @@
           { "key": "x-api-key", "value": "{{api_key}}" }
         ],
         "url": {
-          "raw": "{{base_url}}/athletes/{{created_athlete_id}}",
+          "raw": "{{base_url}}/athletes/{{created_athlete_number}}",
           "host": ["{{base_url}}"],
-          "path": ["athletes", "{{created_athlete_id}}"],
+          "path": ["athletes", "{{created_athlete_number}}"],
           "variable": [
-            { "key": "created_athlete_id", "value": "" }
+            { "key": "created_athlete_number", "value": "" }
           ]
         }
       },
@@ -100,14 +100,14 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"Name\": \"Juan Updated\",\n  \"Surname\": \"Perez\",\n  \"trial\": [\"sprint\"],\n  \"distance\": \"100m\",\n  \"Phase\": \"Qualifiers\",\n  \"Number\": 7\n}"
+          "raw": "{\n  \"Number\": {{created_athlete_number}},\n  \"Name\": \"Juan Updated\",\n  \"Surname\": \"Perez\",\n  \"trial\": [\"sprint\"],\n  \"distance\": \"100m\",\n  \"Phase\": \"Qualifiers\"\n}"
         },
         "url": {
-          "raw": "{{base_url}}/athletes/{{created_athlete_id}}",
+          "raw": "{{base_url}}/athletes/{{created_athlete_number}}",
           "host": ["{{base_url}}"],
-          "path": ["athletes", "{{created_athlete_id}}"],
+          "path": ["athletes", "{{created_athlete_number}}"],
           "variable": [
-            { "key": "created_athlete_id", "value": "" }
+            { "key": "created_athlete_number", "value": "" }
           ]
         }
       },
@@ -131,11 +131,11 @@
           { "key": "x-api-key", "value": "{{api_key}}" }
         ],
         "url": {
-          "raw": "{{base_url}}/athletes/{{created_athlete_id}}",
+          "raw": "{{base_url}}/athletes/{{created_athlete_number}}",
           "host": ["{{base_url}}"],
-          "path": ["athletes", "{{created_athlete_id}}"],
+          "path": ["athletes", "{{created_athlete_number}}"],
           "variable": [
-            { "key": "created_athlete_id", "value": "" }
+            { "key": "created_athlete_number", "value": "" }
           ]
         }
       },
@@ -145,7 +145,7 @@
           "script": {
             "exec": [
               "pm.test('Status code is 204 or 404', function () {pm.expect(pm.response.code).to.be.oneOf([204,404]);});",
-              "if (pm.response.code === 204) { pm.environment.unset('created_athlete_id'); }"
+              "if (pm.response.code === 204) { pm.environment.unset('created_athlete_number'); }"
             ]
           }
         }

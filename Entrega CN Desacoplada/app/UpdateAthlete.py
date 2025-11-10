@@ -20,16 +20,14 @@ def _build_response(status_code, body):
 
 def handler(event, context):
     try:
-        athlete_number = int(event['pathParameters']['id'])
+        athlete_id = event['pathParameters']['id']
         data = json.loads(event.get('body', '{}'))
         athlete_data = Athlete(**data)
-        updated_athlete = db.update_athlete(athlete_number, athlete_data)
+        updated_athlete = db.update_athlete(athlete_id, athlete_data)
         if updated_athlete:
             return _build_response(200, updated_athlete.model_dump())
         else:
-            return _build_response(404, {"error": "Pokémon no encontrado o actualización fallida"})
-    except ValueError:
-        return _build_response(400, {"error": "El ID debe ser un número entero."})
+            return _build_response(404, {"error": "Atleta no encontrado o actualización fallida"})
     except ValidationError as e:
         return _build_response(400, {"error": "Input inválido", "detalles": e.errors()})
     except Exception:

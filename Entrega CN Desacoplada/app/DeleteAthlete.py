@@ -18,14 +18,12 @@ def _build_response(status_code, body):
 
 def handler(event, context):
     try:
-        athlete_number = int(event['pathParameters']['id'])
-        success = db.delete_athlete(athlete_number)
+        athlete_id = event['pathParameters']['id']
+        success = db.delete_athlete(athlete_id)
         if success:
             return _build_response(204, {})
         else:
-            return _build_response(404, {"error": "Pokémon no encontrado"})
-    except ValueError:
-        return _build_response(400, {"error": "El ID debe ser un número entero."})
+            return _build_response(404, {"error": "Atleta no encontrado"})
     except Exception:
         traceback.print_exc()
         return _build_response(500, {"error": "Error interno del servidor"})
