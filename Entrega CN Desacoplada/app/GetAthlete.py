@@ -18,8 +18,8 @@ def _build_response(status_code, body):
 
 def handler(event, context):
     try:
-        athlete_id = int(event['pathParameters']['id'])
-        athlete = db.get_athlete(athlete_id)
+        athlete_number = int(event['pathParameters']['id'])
+        athlete = db.get_athlete(athlete_number)
         if athlete:
             return _build_response(200, athlete.model_dump())
         else:

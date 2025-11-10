@@ -1,0 +1,155 @@
+{
+  "info": {
+    "name": "Athletes API - Collection",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "item": [
+    {
+      "name": "Create Athlete",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "x-api-key", "value": "{{api_key}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"Name\": \"Juan\",\n  \"Surname\": \"Perez\",\n  \"trial\": [\"sprint\"],\n  \"distance\": \"100m\",\n  \"Phase\": \"Qualifiers\",\n  \"Number\": 7\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/athletes",
+          "host": ["{{base_url}}"],
+          "path": ["athletes"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 201', function () {pm.response.to.have.status(201);});",
+              "const json = pm.response.json();",
+              "pm.test('Response has athlete_id', function () {pm.expect(json).to.have.property('athlete_id');});",
+              "if (json.athlete_id) { pm.environment.set('created_athlete_id', json.athlete_id); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Get All Athletes",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "x-api-key", "value": "{{api_key}}" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/athletes",
+          "host": ["{{base_url}}"],
+          "path": ["athletes"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {pm.response.to.have.status(200);});",
+              "pm.test('Body is array', function () {pm.expect(pm.response.json()).to.be.an('array');});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Get Athlete by ID",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "x-api-key", "value": "{{api_key}}" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/athletes/{{created_athlete_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["athletes", "{{created_athlete_id}}"],
+          "variable": [
+            { "key": "created_athlete_id", "value": "" }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 404', function () {pm.expect(pm.response.code).to.be.oneOf([200,404]);});",
+              "if (pm.response.code === 200) { pm.test('Returned has Name', () => pm.expect(pm.response.json()).to.have.property('Name')); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Update Athlete",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "x-api-key", "value": "{{api_key}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"Name\": \"Juan Updated\",\n  \"Surname\": \"Perez\",\n  \"trial\": [\"sprint\"],\n  \"distance\": \"100m\",\n  \"Phase\": \"Qualifiers\",\n  \"Number\": 7\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/athletes/{{created_athlete_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["athletes", "{{created_athlete_id}}"],
+          "variable": [
+            { "key": "created_athlete_id", "value": "" }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 404', function () {pm.expect(pm.response.code).to.be.oneOf([200,404]);});",
+              "if (pm.response.code === 200) { pm.test('Updated Name applied', () => pm.expect(pm.response.json()).to.have.property('Name','Juan Updated')); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Delete Athlete",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          { "key": "x-api-key", "value": "{{api_key}}" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/athletes/{{created_athlete_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["athletes", "{{created_athlete_id}}"],
+          "variable": [
+            { "key": "created_athlete_id", "value": "" }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 204 or 404', function () {pm.expect(pm.response.code).to.be.oneOf([204,404]);});",
+              "if (pm.response.code === 204) { pm.environment.unset('created_athlete_id'); }"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

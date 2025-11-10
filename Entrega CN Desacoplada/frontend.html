@@ -3,50 +3,144 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pokédex API Tester (CON API KEY)</title>
+    <title>Athletes API Tester (CON API KEY)</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; background: #f4f4f4; } h1 { text-align: center; color: #333; }
-        h2 { border-bottom: 2px solid #ddd; padding-bottom: 5px; }
-        .container { max-width: 800px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        form { margin-bottom: 20px; } input[type="text"], input[type="number"] { width: 95%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        h2 { border-bottom: 2px solid #ddd; padding-bottom: 5px; margin-top: 25px; }
+        .container { max-width: 900px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        form { margin-bottom: 20px; background: #f9f9f9; padding: 15px; border-radius: 4px; }
+        input[type="text"], input[type="number"], select { width: 95%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; }
         .api-config { background: #eee; padding: 15px; border-radius: 4px; margin-bottom: 20px; }
         button { background: #007BFF; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; } button:hover { background: #0056b3; }
         button.delete { background: #DC3545; } button.delete:hover { background: #c82333; }
-        #responseArea { margin-top: 20px; background: #222; color: #0f0; padding: 15px; border-radius: 4px; font-family: monospace; white-space: pre-wrap; word-wrap: break-word; }
+        #responseArea { margin-top: 20px; background: #222; color: #0f0; padding: 15px; border-radius: 4px; font-family: monospace; white-space: pre-wrap; word-wrap: break-word; max-height: 500px; overflow-y: auto; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; font-size: 13px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .checkbox-group { display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 10px; }
+        .checkbox-group label { display: flex; align-items: center; font-weight: normal; margin: 0; }
+        .checkbox-group input[type="checkbox"] { margin-right: 5px; width: auto; }
+        .hint { font-size: 11px; color: #888; margin-top: -8px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Pokédex API Tester (CON API KEY)</h1>
+        <h1>🏃 Athletes API Tester (CON API KEY)</h1>
         <div class="api-config">
             <h2>Configuración de la API</h2>
             <label for="apiUrl">API Endpoint URL:</label>
-            <input type="text" id="apiUrl" placeholder="Pega la URL de 'ApiUrl' aquí (ej: https://.../Prod/pokemon)">
+            <input type="text" id="apiUrl" placeholder="Pega la URL de 'ApiUrl' aquí (ej: https://.../Prod/athletes)">
             <label for="apiKey">API Key (Secreta):</label>
             <input type="text" id="apiKey" placeholder="Pega tu clave (obtenida de API Gateway -> Planes de Uso)">
         </div>
-        <h2>Crear Pokémon (POST /pokemon)</h2>
+
+        <h2>Crear Atleta (POST /athletes)</h2>
         <form id="formCreate">
-            <input type="number" id="createId" placeholder="ID (ej: 25)" required>
-            <input type="text" id="createName" placeholder="Nombre (ej: Pikachu)" required>
-            <input type="text" id="createType" placeholder="Tipo (ej: Eléctrico)" required>
-            <button type="submit">Crear</button>
+            <div class="form-row">
+                <div>
+                    <label for="createName">Nombre *</label>
+                    <input type="text" id="createName" placeholder="ej: Usain" required>
+                </div>
+                <div>
+                    <label for="createSurname">Apellido *</label>
+                    <input type="text" id="createSurname" placeholder="ej: Bolt" required>
+                </div>
+            </div>
+
+            <label>Pruebas (trial) - Selecciona una o más *</label>
+            <div class="checkbox-group">
+                <label><input type="checkbox" name="createTrial" value="sprint" checked> Sprint</label>
+                <label><input type="checkbox" name="createTrial" value="hurdles"> Hurdles</label>
+                <label><input type="checkbox" name="createTrial" value="weight"> Weight</label>
+                <label><input type="checkbox" name="createTrial" value="javelin"> Javelin</label>
+                <label><input type="checkbox" name="createTrial" value="disc"> Disc</label>
+            </div>
+
+            <label for="createDistance">Distancia (opcional)</label>
+            <input type="text" id="createDistance" placeholder="ej: 100m, 200m">
+
+            <div class="form-row">
+                <div>
+                    <label for="createPhase">Fase *</label>
+                    <select id="createPhase">
+                        <option value="Qualifiers" selected>Qualifiers</option>
+                        <option value="Semi-Final">Semi-Final</option>
+                        <option value="Final">Final</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="createNumber">Número del Atleta</label>
+                    <input type="number" id="createNumber" placeholder="ej: 100" value="0">
+                </div>
+            </div>
+
+            <button type="submit">Crear Atleta</button>
         </form>
-        <h2>Obtener Pokémon (GET /pokemon/{id})</h2>
+
+        <h2>Obtener Atleta (GET /athletes/{id})</h2>
         <form id="formGet">
-            <input type="number" id="getId" placeholder="ID del Pokémon" required>
+            <label for="getId">Athlete ID (UUID)</label>
+            <input type="text" id="getId" placeholder="ej: 550e8400-e29b-41d4-a716-446655440000" required>
             <button type="submit">Obtener</button>
         </form>
-        <h2>Actualizar Pokémon (PUT /pokemon/{id})</h2>
+
+        <h2>Actualizar Atleta (PUT /athletes/{id})</h2>
         <form id="formUpdate">
-            <input type="number" id="updateId" placeholder="ID del Pokémon a actualizar" required>
-            <input type="text" id="updateName" placeholder="Nuevo Nombre (opcional)">
-            <input type="text" id="updateType" placeholder="Nuevo Tipo (opcional)">
+            <label for="updateId">Athlete ID (UUID) *</label>
+            <input type="text" id="updateId" placeholder="UUID del atleta a actualizar" required>
+
+            <div class="form-row">
+                <div>
+                    <label for="updateName">Nuevo Nombre</label>
+                    <input type="text" id="updateName" placeholder="opcional">
+                </div>
+                <div>
+                    <label for="updateSurname">Nuevo Apellido</label>
+                    <input type="text" id="updateSurname" placeholder="opcional">
+                </div>
+            </div>
+
+            <label>Nuevas Pruebas (trial)</label>
+            <div class="checkbox-group">
+                <label><input type="checkbox" name="updateTrial" value="sprint"> Sprint</label>
+                <label><input type="checkbox" name="updateTrial" value="hurdles"> Hurdles</label>
+                <label><input type="checkbox" name="updateTrial" value="weight"> Weight</label>
+                <label><input type="checkbox" name="updateTrial" value="javelin"> Javelin</label>
+                <label><input type="checkbox" name="updateTrial" value="disc"> Disc</label>
+            </div>
+            <p class="hint">Si no seleccionas ninguna, no se actualizará este campo</p>
+
+            <label for="updateDistance">Nueva Distancia</label>
+            <input type="text" id="updateDistance" placeholder="opcional">
+
+            <div class="form-row">
+                <div>
+                    <label for="updatePhase">Nueva Fase</label>
+                    <select id="updatePhase">
+                        <option value="">-- No cambiar --</option>
+                        <option value="Qualifiers">Qualifiers</option>
+                        <option value="Semi-Final">Semi-Final</option>
+                        <option value="Final">Final</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="updateNumber">Nuevo Número</label>
+                    <input type="number" id="updateNumber" placeholder="opcional">
+                </div>
+            </div>
+
             <button type="submit">Actualizar</button>
         </form>
-        <h2>Obtener Todos (GET /pokemon) y Borrar (DELETE /pokemon/{id})</h2>
-        <form id="formGetAll"><button type="submit">Obtener Todos</button></form>
-        <form id="formDelete"><input type="number" id="deleteId" placeholder="ID del Pokémon a borrar" required><button type="submit" class="delete">Borrar</button></form>
+
+        <h2>Operaciones Generales</h2>
+        <form id="formGetAll" style="display: inline-block; margin-right: 10px;">
+            <button type="submit">📋 Obtener Todos los Atletas</button>
+        </form>
+        
+        <form id="formDelete" style="display: inline-block;">
+            <input type="text" id="deleteId" placeholder="UUID del atleta a borrar" required style="width: 300px;">
+            <button type="submit" class="delete">🗑️ Borrar</button>
+        </form>
+
         <h2>Respuesta de la API</h2>
         <pre id="responseArea">Esperando acción...</pre>
     </div>
@@ -59,61 +153,142 @@
         function getApiBaseUrl() {
             const url = document.getElementById('apiUrl').value;
             if (!url) { alert('Por favor, introduce la URL de la API'); return null; }
-            return url.replace(/\/pokemon$/, ''); 
+            return url.replace(/\/athletes$/, ''); 
         }
         function getHeaders() {
             const key = document.getElementById('apiKey').value;
             if (!key) { alert('Por favor, introduce la API Key'); return null; }
             return { 'Content-Type': 'application/json', 'x-api-key': key };
         }
+        function getSelectedTrials(name) {
+            const checkboxes = document.querySelectorAll(`input[name="${name}"]:checked`);
+            return Array.from(checkboxes).map(cb => cb.value);
+        }
+
+        // CREATE
         document.getElementById('formCreate').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const API_URL = getApiBaseUrl() + '/pokemon'; const headers = getHeaders(); if (!API_URL || !headers) return;
-            const id = document.getElementById('createId').value, name = document.getElementById('createName').value, type = document.getElementById('createType').value;
+            const API_URL = getApiBaseUrl() + '/athletes'; 
+            const headers = getHeaders(); 
+            if (!API_URL || !headers) return;
+
+            const trials = getSelectedTrials('createTrial');
+            if (trials.length === 0) {
+                alert('Debes seleccionar al menos una prueba (trial)');
+                return;
+            }
+
+            const body = {
+                Name: document.getElementById('createName').value,
+                Surname: document.getElementById('createSurname').value,
+                trial: trials,
+                Phase: document.getElementById('createPhase').value,
+                Number: parseInt(document.getElementById('createNumber').value) || 0
+            };
+
+            const distance = document.getElementById('createDistance').value;
+            if (distance) body.distance = distance;
+
             try {
                 const response = await fetch(API_URL, {
-                    method: 'POST', headers: headers,
-                    body: JSON.stringify({ pokedex_id: parseInt(id), name: name, pokemon_type: type })
+                    method: 'POST', headers: headers, body: JSON.stringify(body)
                 });
-                const data = await response.json(); showResponse(data, response.status);
-            } catch (error) { showResponse({ error: error.message }, 500); }
+                const data = await response.json(); 
+                showResponse(data, response.status);
+            } catch (error) { 
+                showResponse({ error: error.message }, 500); 
+            }
         });
+
+        // GET ONE
         document.getElementById('formGet').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const id = document.getElementById('getId').value; const API_URL = `${getApiBaseUrl()}/pokemon/${id}`; const headers = getHeaders(); if (!API_URL || !headers) return;
+            const id = document.getElementById('getId').value; 
+            const API_URL = `${getApiBaseUrl()}/athletes/${id}`; 
+            const headers = getHeaders(); 
+            if (!API_URL || !headers) return;
             try {
                 const response = await fetch(API_URL, { method: 'GET', headers: headers });
-                const data = await response.json(); showResponse(data, response.status);
-            } catch (error) { showResponse({ error: error.message }, 500); }
+                const data = await response.json(); 
+                showResponse(data, response.status);
+            } catch (error) { 
+                showResponse({ error: error.message }, 500); 
+            }
         });
+
+        // GET ALL
         document.getElementById('formGetAll').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const API_URL = getApiBaseUrl() + '/pokemon'; const headers = getHeaders(); if (!API_URL || !headers) return;
+            const API_URL = getApiBaseUrl() + '/athletes'; 
+            const headers = getHeaders(); 
+            if (!API_URL || !headers) return;
             try {
                 const response = await fetch(API_URL, { method: 'GET', headers: headers });
-                const data = await response.json(); showResponse(data, response.status);
-            } catch (error) { showResponse({ error: error.message }, 500); }
+                const data = await response.json(); 
+                showResponse(data, response.status);
+            } catch (error) { 
+                showResponse({ error: error.message }, 500); 
+            }
         });
+
+        // UPDATE
         document.getElementById('formUpdate').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const id = document.getElementById('updateId').value; const API_URL = `${getApiBaseUrl()}/pokemon/${id}`; const headers = getHeaders(); if (!API_URL || !headers) return;
-            const name = document.getElementById('updateName').value, type = document.getElementById('updateType').value;
-            const updateData = {}; if (name) updateData.name = name; if (type) updateData.pokemon_type = type;
+            const id = document.getElementById('updateId').value; 
+            const API_URL = `${getApiBaseUrl()}/athletes/${id}`; 
+            const headers = getHeaders(); 
+            if (!API_URL || !headers) return;
+
+            const updateData = {};
+            
+            const name = document.getElementById('updateName').value;
+            const surname = document.getElementById('updateSurname').value;
+            const distance = document.getElementById('updateDistance').value;
+            const phase = document.getElementById('updatePhase').value;
+            const number = document.getElementById('updateNumber').value;
+            const trials = getSelectedTrials('updateTrial');
+
+            if (name) updateData.Name = name;
+            if (surname) updateData.Surname = surname;
+            if (trials.length > 0) updateData.trial = trials;
+            if (distance) updateData.distance = distance;
+            if (phase) updateData.Phase = phase;
+            if (number) updateData.Number = parseInt(number);
+
+            if (Object.keys(updateData).length === 0) {
+                alert('Debes modificar al menos un campo');
+                return;
+            }
+
             try {
                 const response = await fetch(API_URL, {
                     method: 'PUT', headers: headers, body: JSON.stringify(updateData)
                 });
-                const data = await response.json(); showResponse(data, response.status);
-            } catch (error) { showResponse({ error: error.message }, 500); }
+                const data = await response.json(); 
+                showResponse(data, response.status);
+            } catch (error) { 
+                showResponse({ error: error.message }, 500); 
+            }
         });
+
+        // DELETE
         document.getElementById('formDelete').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const id = document.getElementById('deleteId').value; const API_URL = `${getApiBaseUrl()}/pokemon/${id}`; const headers = getHeaders(); if (!API_URL || !headers) return;
+            const id = document.getElementById('deleteId').value; 
+            const API_URL = `${getApiBaseUrl()}/athletes/${id}`; 
+            const headers = getHeaders(); 
+            if (!API_URL || !headers) return;
             try {
                 const response = await fetch(API_URL, { method: 'DELETE', headers: headers });
-                if (response.status === 204) { showResponse({ message: `Pokémon ${id} eliminado.` }, 204); }
-                else { const data = await response.json(); showResponse(data, response.status); }
-            } catch (error) { showResponse({ error: error.message }, 500); }
+                if (response.status === 204) { 
+                    showResponse({ message: `Atleta ${id} eliminado correctamente.` }, 204); 
+                } else { 
+                    const data = await response.json(); 
+                    showResponse(data, response.status); 
+                }
+            } catch (error) { 
+                showResponse({ error: error.message }, 500); 
+            }
         });
     </script>
 </body>

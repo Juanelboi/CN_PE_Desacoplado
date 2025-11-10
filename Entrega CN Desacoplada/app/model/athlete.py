@@ -10,9 +10,17 @@ class Athlete(BaseModel):
     trial: List[Literal['sprint', 'hurdles', 'weight', 'javelin', 'disc']] = ['sprint']
     distance: Optional[str] = None
     Phase: Literal['Qualifiers', 'Semi-Final', 'Final'] = 'Qualifiers'
-    Number: int = 0
+    Number: int = Field(..., description="Numeric identifier for the athlete (used as primary key)")
     created_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
     updated_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
     
     def update_timestamp(self):
         self.updated_at = datetime.utcnow().isoformat()
+
+    @field_validator('Number')
+    def validate_number(cls, v):
+        if not isinstance(v, int):
+            raise ValueError('Number debe ser un entero')
+        if v <= 0:
+            raise ValueError('Number debe ser mayor que 0')
+        return v

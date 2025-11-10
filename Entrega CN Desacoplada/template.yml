@@ -11,9 +11,9 @@ Parameters:
   
 
   DBDynamoName:
-  Type: String
-  Default: "athletes"
-  Description: DynamoDB table name
+    Type: String
+    Default: "athletes"
+    Description: DynamoDB table name
 
 Resources:
   RestApi:
@@ -26,14 +26,14 @@ Resources:
   AthletesResource:
     Type: AWS::ApiGateway::Resource
     Properties:
-      RestApiId: !Ref Athletes-Lambda-API
-      ParentId: !GetAtt Athletes-Lambda-API.RootResourceId
+      RestApiId: !Ref RestApi
+      ParentId: !GetAtt RestApi.RootResourceId
       PathPart: "athletes"
 
   AthleteIdResource:
     Type: AWS::ApiGateway::Resource
     Properties:
-      RestApiId: !Ref Athletes-Lambda-API
+      RestApiId: !Ref RestApi
       ParentId: !Ref AthletesResource
       PathPart: "{id}"
 
@@ -259,7 +259,7 @@ Resources:
             method.response.header.Access-Control-Allow-Methods: true
             method.response.header.Access-Control-Allow-Origin: true
 
-  OptionsPokemonIdMethod:
+  OptionsAthletesdMethod:
     Type: AWS::ApiGateway::Method
     Properties:
       RestApiId: !Ref RestApi
@@ -289,13 +289,13 @@ Resources:
   ApiDeployment:
     Type: AWS::ApiGateway::Deployment
     DependsOn: 
-      - CreateRestApiMethod
+      - CreateAthleteApiMethod
       - GetRestApiMethod
       - GetAllRestApiMethod
       - UpdateRestApiMethod
       - DeleteRestApiMethod
       - OptionsAthleteMethod
-      - OptionsPokemonIdMethod
+      - OptionsAthletesdMethod
     Properties:
       RestApiId: !Ref RestApi
 

@@ -18,8 +18,8 @@ def _build_response(status_code, body):
 
 def handler(event, context):
     try:
-        athlete_id = int(event['pathParameters']['id'])
-        success = db.delete_athlete(athlete_id)
+        athlete_number = int(event['pathParameters']['id'])
+        success = db.delete_athlete(athlete_number)
         if success:
             return _build_response(204, {})
         else:

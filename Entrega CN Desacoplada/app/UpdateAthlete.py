@@ -20,10 +20,10 @@ def _build_response(status_code, body):
 
 def handler(event, context):
     try:
-        athlete_id = int(event['pathParameters']['id'])
+        athlete_number = int(event['pathParameters']['id'])
         data = json.loads(event.get('body', '{}'))
         athlete_data = Athlete(**data)
-        updated_athlete = db.update_athlete(athlete_id, athlete_data)
+        updated_athlete = db.update_athlete(athlete_number, athlete_data)
         if updated_athlete:
             return _build_response(200, updated_athlete.model_dump())
         else:

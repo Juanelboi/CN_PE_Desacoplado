@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional
-from models.athlete import Athlete
+from app.model.athlete import Athlete
 
 class Database(ABC):
     
@@ -13,7 +13,7 @@ class Database(ABC):
         pass
     
     @abstractmethod
-    def get_athlete(self, athlete_id: str) -> Optional[Athlete]:
+    def get_athlete(self, athlete_number: int) -> Optional[Athlete]:
         pass
     
     @abstractmethod
@@ -21,9 +21,9 @@ class Database(ABC):
         pass
     
     @abstractmethod
-    def update_athlete(self, athlete_id: str, athlete: Athlete) -> Optional[Athlete]:
+    def update_athlete(self, athlete_number: int, athlete: Athlete) -> Optional[Athlete]:
         pass
     
     @abstractmethod
-    def delete_athlete(self, athlete_id: str) -> bool:
+    def delete_athlete(self, athlete_number: int) -> bool:
         pass
