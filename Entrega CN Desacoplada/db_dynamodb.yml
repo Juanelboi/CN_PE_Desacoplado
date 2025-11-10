@@ -1,30 +1,30 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: "Tabla DynamoDB para la API de atletas (Versión desacoplada)"
+Description: "DynamoDB Table mínima para pruebas"
 
 Parameters:
   TableName:
     Type: String
-    Default: athletes-table 
-    Description: Nombre de la tabla DynamoDB para atletas
+    Default: athletes-table
+    Description: DynamoDB table Name
 
 Resources:
-  AthletesTable: 
+  AthletesTable:
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: !Ref TableName
       AttributeDefinitions:
-        - AttributeName: athlete_id 
-          AttributeType: N          
+        - AttributeName: athlete_id
+          AttributeType: S
       KeySchema:
-        - AttributeName: athlete_id 
+        - AttributeName: athlete_id
           KeyType: HASH
       BillingMode: PAY_PER_REQUEST
 
 Outputs:
   TableName:
-    Description: Nombre de la tabla DynamoDB
-    Value: !Ref AthletesTable 
+    Description: DynamoDB table name
+    Value: !Ref AthletesTable
 
   TableArn:
-    Description: ARN de la tabla DynamoDB
-    Value: !GetAtt AthletesTable.Arn 
+    Description: ARN DynamoDB table
+    Value: !GetAtt AthletesTable.Arn
