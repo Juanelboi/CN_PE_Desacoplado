@@ -1,10 +1,10 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: "ECR repository para las imágenes de Pokedex Lambda"
+Description: "ECR repository para las imágenes de atletas en Lambda"
 
 Parameters:
   RepositoryName:
     Type: String
-    Default: pokedex-lambda-image
+    Default: athletes-lambda-image
     Description: Nombre del repositorio ECR (solo letras minúsculas, números, guiones)
 
 Resources:
@@ -15,9 +15,23 @@ Resources:
       ImageScanningConfiguration:
         ScanOnPush: false
       LifecyclePolicy:
-        # --- CORRECCIÓN ---
-        # El JSON debe estar en una sola línea
-        LifecyclePolicyText: '{"rules":[{"rulePriority":1,"description":"Mantener últimas 2 imágenes de pokedex","selection":{"tagStatus":"any","countType":"imageCountMoreThan","countNumber":2},"action":{"type":"expire"}}]}'
+        LifecyclePolicyText: | 
+          {
+            "rules": [
+            { 
+              "rulePriority": 1,
+              "description": "Mantener últimas 2 imágenes de atletas",
+              "selection": {
+                "tagStatus": "any",
+                "countType": "imageCountMoreThan",
+                "countNumber": 2
+                },
+                "action": {
+                "type": "expire"
+                }
+              }
+            ]
+          }'
 
 Outputs:
   RepositoryUri:

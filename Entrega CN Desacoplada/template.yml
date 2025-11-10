@@ -1,59 +1,58 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: >
-  API Pokedex (Desacoplada) con Lambda+Docker y API Key [USA LabRole]
+  API Athletes (Desacoplada) con Lambda+Docker y API Key [USA LabRole]
   (Versión Pura de CloudFormation)
 
 Parameters:
   ImageName:
     Type: String
-    Description: "El nombre de la imagen en ECR (ej: pokedex-lambda-image:latest)"
-    Default: "pokedex-lambda-image:latest"
+    Description: "El nombre de la imagen en ECR (ej: athletes-lambda-image:latest)"
+    Default: "athletes-lambda-image:latest"
   TableName:
     Type: String
-    Default: "PokemonPokedexTable-Lambda"
+    Default: "AthletesTable-Lambda"
 
 Resources:
-  # 1. La Base de Datos
   PokemonTable:
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: !Ref TableName
       AttributeDefinitions:
-        - AttributeName: pokedex_id
+        - AttributeName: athletes_id
           AttributeType: N
       KeySchema:
-        - AttributeName: pokedex_id
+        - AttributeName: athletes_id
           KeyType: HASH
       BillingMode: PAY_PER_REQUEST
 
   # 2. El API Gateway
-  PokemonApi:
+  RestApi:
     Type: AWS::ApiGateway::RestApi
     Properties:
-      Name: Pokedex-Lambda-API
+      Name: Athletes-Lambda-API
       EndpointConfiguration:
         Types: [REGIONAL]
 
   # --- Recursos (Paths) ---
-  PokemonResource:
+  AthletesResource:
     Type: AWS::ApiGateway::Resource
     Properties:
-      RestApiId: !Ref PokemonApi
-      ParentId: !GetAtt PokemonApi.RootResourceId
+      RestApiId: !Ref AthletesApi
+      ParentId: !GetAtt AthletesApi.RootResourceId
       PathPart: "pokemon"
 
-  PokemonIdResource:
+  AthleteIdResource:
     Type: AWS::ApiGateway::Resource
     Properties:
-      RestApiId: !Ref PokemonApi
-      ParentId: !Ref PokemonResource
+      RestApiId: !Ref AthletesApi
+      ParentId: !Ref AthletesResource
       PathPart: "{id}"
 
   # --- 1. CREATE (POST /pokemon) ---
-  CreatePokemonLambda:
+  CreateAthletesLambda:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: Pokedex-CreatePokemon
+      FunctionName: Pokedex-CreateAthletes
       PackageType: Image
       Code:
         ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ImageName}"
@@ -66,12 +65,12 @@ Resources:
         Variables:
           TABLE_NAME: !Ref TableName
       ImageConfig:
-        Command: ["app.CreatePokemon.handler"]
+        Command: ["app.CreateAthlete.handler"]
 
-  CreatePokemonApiMethod:
+  CreateAthleteApiMethod:
     Type: AWS::ApiGateway::Method
     Properties:
-      RestApiId: !Ref PokemonApi
+      RestApiId: !Ref RestApi
       ResourceId: !Ref PokemonResource
       HttpMethod: POST
       AuthorizationType: NONE
@@ -87,7 +86,7 @@ Resources:
       FunctionName: !GetAtt CreatePokemonLambda.Arn
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${PokemonApi}/*/POST/pokemon"
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestApi}/*/POST/pokemon"
 
   # --- 2. GET BY ID (GET /pokemon/{id}) ---
   GetPokemonLambda:
@@ -108,10 +107,10 @@ Resources:
       ImageConfig:
         Command: ["app.GetPokemon.handler"]
 
-  GetPokemonApiMethod:
+  GetRestApiMethod:
     Type: AWS::ApiGateway::Method
     Properties:
-      RestApiId: !Ref PokemonApi
+      RestApiId: !Ref RestApi
       ResourceId: !Ref PokemonIdResource
       HttpMethod: GET
       AuthorizationType: NONE
@@ -127,7 +126,7 @@ Resources:
       FunctionName: !GetAtt GetPokemonLambda.Arn
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${PokemonApi}/*/GET/pokemon/{id}"
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestApi}/*/GET/pokemon/{id}"
 
   # --- 3. GET ALL (GET /pokemon) ---
   GetAllPokemonLambda:
@@ -148,10 +147,10 @@ Resources:
       ImageConfig:
         Command: ["app.GetAllPokemon.handler"]
 
-  GetAllPokemonApiMethod:
+  GetAllRestApiMethod:
     Type: AWS::ApiGateway::Method
     Properties:
-      RestApiId: !Ref PokemonApi
+      RestApiId: !Ref RestApi
       ResourceId: !Ref PokemonResource
       HttpMethod: GET
       AuthorizationType: NONE
@@ -167,7 +166,7 @@ Resources:
       FunctionName: !GetAtt GetAllPokemonLambda.Arn
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${PokemonApi}/*/GET/pokemon"
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestApi}/*/GET/pokemon"
 
   # --- 4. UPDATE (PUT /pokemon/{id}) ---
   UpdatePokemonLambda:
@@ -188,10 +187,10 @@ Resources:
       ImageConfig:
         Command: ["app.UpdatePokemon.handler"]
 
-  UpdatePokemonApiMethod:
+  UpdateRestApiMethod:
     Type: AWS::ApiGateway::Method
     Properties:
-      RestApiId: !Ref PokemonApi
+      RestApiId: !Ref RestApi
       ResourceId: !Ref PokemonIdResource
       HttpMethod: PUT
       AuthorizationType: NONE
@@ -207,7 +206,7 @@ Resources:
       FunctionName: !GetAtt UpdatePokemonLambda.Arn
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${PokemonApi}/*/PUT/pokemon/{id}"
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestApi}/*/PUT/pokemon/{id}"
 
   # --- 5. DELETE (DELETE /pokemon/{id}) ---
   DeletePokemonLambda:
@@ -228,10 +227,10 @@ Resources:
       ImageConfig:
         Command: ["app.DeletePokemon.handler"]
 
-  DeletePokemonApiMethod:
+  DeleteRestApiMethod:
     Type: AWS::ApiGateway::Method
     Properties:
-      RestApiId: !Ref PokemonApi
+      RestApiId: !Ref RestApi
       ResourceId: !Ref PokemonIdResource
       HttpMethod: DELETE
       AuthorizationType: NONE
@@ -247,13 +246,13 @@ Resources:
       FunctionName: !GetAtt DeletePokemonLambda.Arn
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${PokemonApi}/*/DELETE/pokemon/{id}"
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestApi}/*/DELETE/pokemon/{id}"
 
   # --- 6. OPTIONS (CORS Preflight /pokemon) ---
   OptionsPokemonMethod:
     Type: AWS::ApiGateway::Method
     Properties:
-      RestApiId: !Ref PokemonApi
+      RestApiId: !Ref RestApi
       ResourceId: !Ref PokemonResource
       HttpMethod: OPTIONS
       AuthorizationType: NONE
@@ -281,7 +280,7 @@ Resources:
   OptionsPokemonIdMethod:
     Type: AWS::ApiGateway::Method
     Properties:
-      RestApiId: !Ref PokemonApi
+      RestApiId: !Ref RestApi
       ResourceId: !Ref PokemonIdResource
       HttpMethod: OPTIONS
       AuthorizationType: NONE
@@ -309,20 +308,20 @@ Resources:
   ApiDeployment:
     Type: AWS::ApiGateway::Deployment
     DependsOn: 
-      - CreatePokemonApiMethod
-      - GetPokemonApiMethod
-      - GetAllPokemonApiMethod
-      - UpdatePokemonApiMethod
-      - DeletePokemonApiMethod
+      - CreateRestApiMethod
+      - GetRestApiMethod
+      - GetAllRestApiMethod
+      - UpdateRestApiMethod
+      - DeleteRestApiMethod
       - OptionsPokemonMethod
       - OptionsPokemonIdMethod
     Properties:
-      RestApiId: !Ref PokemonApi
+      RestApiId: !Ref RestApi
 
   ApiStage:
     Type: AWS::ApiGateway::Stage
     Properties:
-      RestApiId: !Ref PokemonApi
+      RestApiId: !Ref RestApi
       DeploymentId: !Ref ApiDeployment
       StageName: Prod
             
@@ -330,15 +329,15 @@ Resources:
   ApiKey:
     Type: AWS::ApiGateway::ApiKey
     Properties:
-      Name: pokedex-lambda-api-key
+      Name: athletes-lambda-api-key
       Enabled: true
 
   UsagePlan:
     Type: AWS::ApiGateway::UsagePlan
     Properties:
-      UsagePlanName: pokedex-lambda-usage-plan
+      UsagePlanName: athletes-lambda-usage-plan
       ApiStages:
-        - ApiId: !Ref PokemonApi
+        - ApiId: !Ref RestApi
           Stage: !Ref ApiStage
 
   UsagePlanKey:
@@ -351,7 +350,7 @@ Resources:
 Outputs:
   LambdaAPIEndpoint:
     Description: "Endpoint público de la API Lambda (arquitectura desacoplada)"
-    Value: !Sub "https://${PokemonApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/pokemon"
+    Value: !Sub "https://${RestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/pokemon"
     Export:
       Name: LambdaAPIEndpoint
 
