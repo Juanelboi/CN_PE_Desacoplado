@@ -4,7 +4,7 @@ Description: "DynamoDB Table mínima para pruebas"
 Parameters:
   TableName:
     Type: String
-    Default: athletes-table
+    Default: athletes
     Description: DynamoDB table Name
 
 Resources:

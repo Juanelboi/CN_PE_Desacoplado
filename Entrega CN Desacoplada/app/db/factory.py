@@ -1,6 +1,6 @@
 import os
-from databases.db import Database
-from databases.dynamodb_db import DynamoDBDatabase
+from app.db.db import Database
+from app.db.dynamodb_db import DynamoDBDatabase
 
 
 class DatabaseFactory:

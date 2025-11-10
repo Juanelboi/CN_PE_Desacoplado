@@ -1,7 +1,7 @@
 import json
 import traceback
-from db.factory import DatabaseFactory
-from model.athlete import Athlete
+from app.db.factory import DatabaseFactory
+from app.model.athlete import Athlete
 from pydantic import ValidationError
 
 db = DatabaseFactory.create()

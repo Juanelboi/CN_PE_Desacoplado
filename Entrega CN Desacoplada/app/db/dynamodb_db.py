@@ -1,8 +1,8 @@
 import boto3
 from botocore.exceptions import ClientError
 from typing import List, Optional
-from db.db import Database
-from model.athlete import Athlete
+from app.db.db import Database
+from app.model.athlete import Athlete
 import os
 
 class DynamoDBDatabase(Database):
@@ -45,7 +45,6 @@ class DynamoDBDatabase(Database):
                 raise
     
     def create_athlete(self, athlete: Athlete) -> Athlete:
-        # Expect athlete.Number to be set and unique
         self.table.put_item(Item=athlete.model_dump())
         return athlete
     

@@ -7,7 +7,7 @@
     ImageName:
       Type: String
       Description: ECR Image Name
-      Default: athletes-app:latest
+      Default: athletes-app-desacoplada:latest
     
 
     DBDynamoName:
@@ -231,6 +231,37 @@
         Action: lambda:InvokeFunction
         Principal: apigateway.amazonaws.com
         SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestApi}/*/DELETE/athletes/{id}"
+
+    CreateAthletesLambdaLogGroup:
+      Type: AWS::Logs::LogGroup
+      Properties:
+        LogGroupName: !Sub "/aws/lambda/${CreateAthletesLambda}"
+        RetentionInDays: 30
+
+    GetAthletesLambdaLogGroup:
+      Type: AWS::Logs::LogGroup
+      Properties:
+        LogGroupName: !Sub "/aws/lambda/${GetAthletesLambda}"
+        RetentionInDays: 30
+
+    GetAllAthletesLogGroup:
+      Type: AWS::Logs::LogGroup
+      Properties:
+        LogGroupName: !Sub "/aws/lambda/${GetAllAthletes}"
+        RetentionInDays: 30
+
+    UpdateAthleteLambdaLogGroup:
+      Type: AWS::Logs::LogGroup
+      Properties:
+        LogGroupName: !Sub "/aws/lambda/${UpdateAthleteLambda}"
+        RetentionInDays: 30
+
+    DeleteAthleteLambdaLogGroup:
+      Type: AWS::Logs::LogGroup
+      Properties:
+        LogGroupName: !Sub "/aws/lambda/${DeleteAthleteLambda}"
+        RetentionInDays: 30
+    
 
     OptionsAthleteMethod:
       Type: AWS::ApiGateway::Method

@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional
-from model.athlete import Athlete
+from app.model.athlete import Athlete
 
 class Database(ABC):
     
