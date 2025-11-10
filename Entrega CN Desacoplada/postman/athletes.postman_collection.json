@@ -15,7 +15,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"Number\": 7,\n  \"Name\": \"Juan\",\n  \"Surname\": \"Perez\",\n  \"trial\": [\"sprint\"],\n  \"distance\": \"100m\",\n  \"Phase\": \"Qualifiers\"\n}"
+          "raw": "{\n  \"Name\": \"Juan\",\n  \"Surname\": \"Perez\",\n  \"trial\": [\"sprint\"],\n  \"distance\": \"100m\",\n  \"Phase\": \"Qualifiers\"\n}"
         },
         "url": {
           "raw": "{{base_url}}/athletes",
@@ -30,8 +30,8 @@
             "exec": [
               "pm.test('Status code is 201', function () {pm.response.to.have.status(201);});",
               "const json = pm.response.json();",
-              "pm.test('Response has Number', function () {pm.expect(json).to.have.property('Number');});",
-              "if (json.Number) { pm.environment.set('created_athlete_number', json.Number); }"
+              "pm.test('Response has athlete_id', function () {pm.expect(json).to.have.property('athlete_id');});",
+              "if (json.athlete_id) { pm.environment.set('created_athlete_id', json.athlete_id); }"
             ]
           }
         }
@@ -70,11 +70,11 @@
           { "key": "x-api-key", "value": "{{api_key}}" }
         ],
         "url": {
-          "raw": "{{base_url}}/athletes/{{created_athlete_number}}",
+          "raw": "{{base_url}}/athletes/{{created_athlete_id}}",
           "host": ["{{base_url}}"],
-          "path": ["athletes", "{{created_athlete_number}}"],
+          "path": ["athletes", "{{created_athlete_id}}"],
           "variable": [
-            { "key": "created_athlete_number", "value": "" }
+            { "key": "created_athlete_id", "value": "" }
           ]
         }
       },
@@ -98,16 +98,16 @@
           { "key": "Content-Type", "value": "application/json" },
           { "key": "x-api-key", "value": "{{api_key}}" }
         ],
-        "body": {
+          "body": {
           "mode": "raw",
-          "raw": "{\n  \"Number\": {{created_athlete_number}},\n  \"Name\": \"Juan Updated\",\n  \"Surname\": \"Perez\",\n  \"trial\": [\"sprint\"],\n  \"distance\": \"100m\",\n  \"Phase\": \"Qualifiers\"\n}"
+          "raw": "{\n  \"Name\": \"Juan Updated\",\n  \"Surname\": \"Perez\",\n  \"trial\": [\"sprint\"],\n  \"distance\": \"100m\",\n  \"Phase\": \"Qualifiers\"\n}"
         },
         "url": {
-          "raw": "{{base_url}}/athletes/{{created_athlete_number}}",
+          "raw": "{{base_url}}/athletes/{{created_athlete_id}}",
           "host": ["{{base_url}}"],
-          "path": ["athletes", "{{created_athlete_number}}"],
+          "path": ["athletes", "{{created_athlete_id}}"],
           "variable": [
-            { "key": "created_athlete_number", "value": "" }
+            { "key": "created_athlete_id", "value": "" }
           ]
         }
       },
@@ -131,11 +131,11 @@
           { "key": "x-api-key", "value": "{{api_key}}" }
         ],
         "url": {
-          "raw": "{{base_url}}/athletes/{{created_athlete_number}}",
+          "raw": "{{base_url}}/athletes/{{created_athlete_id}}",
           "host": ["{{base_url}}"],
-          "path": ["athletes", "{{created_athlete_number}}"],
+          "path": ["athletes", "{{created_athlete_id}}"],
           "variable": [
-            { "key": "created_athlete_number", "value": "" }
+            { "key": "created_athlete_id", "value": "" }
           ]
         }
       },
