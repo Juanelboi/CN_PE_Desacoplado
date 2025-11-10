@@ -1,341 +1,341 @@
-AWSTemplateFormatVersion: '2010-09-09'
-Description: >
-  API Athletes (Desacoplada) con Lambda+Docker y API Key [USA LabRole]
-  (Versión Pura de CloudFormation)
+  AWSTemplateFormatVersion: '2010-09-09'
+  Description: >
+    API Athletes (Desacoplada) con Lambda+Docker y API Key [USA LabRole]
+    (Versión Pura de CloudFormation)
 
-Parameters:
-  ImageName:
-    Type: String
-    Description: ECR Image Name
-    Default: athletes-app:latest
-  
+  Parameters:
+    ImageName:
+      Type: String
+      Description: ECR Image Name
+      Default: athletes-app:latest
+    
 
-  DBDynamoName:
-    Type: String
-    Default: "athletes"
-    Description: DynamoDB table name
+    DBDynamoName:
+      Type: String
+      Default: "athletes"
+      Description: DynamoDB table name
 
-Resources:
-  RestApi:
-    Type: AWS::ApiGateway::RestApi
-    Properties:
-      Name: Athletes-Lambda-API
-      EndpointConfiguration:
-        Types: [REGIONAL]
+  Resources:
+    RestApi:
+      Type: AWS::ApiGateway::RestApi
+      Properties:
+        Name: Athletes-Lambda-API
+        EndpointConfiguration:
+          Types: [REGIONAL]
 
-  AthletesResource:
-    Type: AWS::ApiGateway::Resource
-    Properties:
-      RestApiId: !Ref RestApi
-      ParentId: !GetAtt RestApi.RootResourceId
-      PathPart: "athletes"
+    AthletesResource:
+      Type: AWS::ApiGateway::Resource
+      Properties:
+        RestApiId: !Ref RestApi
+        ParentId: !GetAtt RestApi.RootResourceId
+        PathPart: "athletes"
 
-  AthleteIdResource:
-    Type: AWS::ApiGateway::Resource
-    Properties:
-      RestApiId: !Ref RestApi
-      ParentId: !Ref AthletesResource
-      PathPart: "{id}"
+    AthleteIdResource:
+      Type: AWS::ApiGateway::Resource
+      Properties:
+        RestApiId: !Ref RestApi
+        ParentId: !Ref AthletesResource
+        PathPart: "{id}"
 
-  CreateAthletesLambda:
-    Type: AWS::Lambda::Function
-    Properties:
-      FunctionName: CreateAthletes
-      PackageType: Image
-      Code:
-        ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ImageName}"
-      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
-      Timeout: 60
-      MemorySize: 256
-      Architectures:
-        - x86_64
-      Environment:
-        Variables:
-          TABLE_NAME: !Ref DBDynamoName
-      ImageConfig:
-        Command: ["app.CreateAthlete.handler"]
+    CreateAthletesLambda:
+      Type: AWS::Lambda::Function
+      Properties:
+        FunctionName: CreateAthletes
+        PackageType: Image
+        Code:
+          ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ImageName}"
+        Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
+        Timeout: 60
+        MemorySize: 256
+        Architectures:
+          - x86_64
+        Environment:
+          Variables:
+            TABLE_NAME: !Ref DBDynamoName
+        ImageConfig:
+          Command: ["app.CreateAthlete.handler"]
 
-  CreateAthleteApiMethod:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      RestApiId: !Ref RestApi
-      ResourceId: !Ref AthletesResource
-      HttpMethod: POST
-      AuthorizationType: NONE
-      ApiKeyRequired: true
-      Integration:
-        Type: AWS_PROXY
-        IntegrationHttpMethod: POST
-        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CreateAthletesLambda.Arn}/invocations"
+    CreateAthleteApiMethod:
+      Type: AWS::ApiGateway::Method
+      Properties:
+        RestApiId: !Ref RestApi
+        ResourceId: !Ref AthletesResource
+        HttpMethod: POST
+        AuthorizationType: NONE
+        ApiKeyRequired: true
+        Integration:
+          Type: AWS_PROXY
+          IntegrationHttpMethod: POST
+          Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CreateAthletesLambda.Arn}/invocations"
 
-  CreateAthletesLambdaPermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      FunctionName: !GetAtt CreateAthletesLambda.Arn
-      Action: lambda:InvokeFunction
-      Principal: apigateway.amazonaws.com
-      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestApi}/*/POST/athletes"
+    CreateAthletesLambdaPermission:
+      Type: AWS::Lambda::Permission
+      Properties:
+        FunctionName: !GetAtt CreateAthletesLambda.Arn
+        Action: lambda:InvokeFunction
+        Principal: apigateway.amazonaws.com
+        SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestApi}/*/POST/athletes"
 
-  GetAthletesLambda:
-    Type: AWS::Lambda::Function
-    Properties:
-      FunctionName: GetAthletesById
-      PackageType: Image
-      Code:
-        ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ImageName}"
-      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
-      Timeout: 60
-      MemorySize: 256
-      Architectures:
-        - x86_64
-      Environment:
-        Variables:
-          TABLE_NAME: !Ref DBDynamoName
-      ImageConfig:
-        Command: ["app.GetAthlete.handler"]
+    GetAthletesLambda:
+      Type: AWS::Lambda::Function
+      Properties:
+        FunctionName: GetAthletesById
+        PackageType: Image
+        Code:
+          ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ImageName}"
+        Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
+        Timeout: 60
+        MemorySize: 256
+        Architectures:
+          - x86_64
+        Environment:
+          Variables:
+            TABLE_NAME: !Ref DBDynamoName
+        ImageConfig:
+          Command: ["app.GetAthlete.handler"]
 
-  GetRestApiMethod:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      RestApiId: !Ref RestApi
-      ResourceId: !Ref AthleteIdResource
-      HttpMethod: GET
-      AuthorizationType: NONE
-      ApiKeyRequired: true
-      Integration:
-        Type: AWS_PROXY
-        IntegrationHttpMethod: POST
-        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetAthletesLambda.Arn}/invocations"
+    GetRestApiMethod:
+      Type: AWS::ApiGateway::Method
+      Properties:
+        RestApiId: !Ref RestApi
+        ResourceId: !Ref AthleteIdResource
+        HttpMethod: GET
+        AuthorizationType: NONE
+        ApiKeyRequired: true
+        Integration:
+          Type: AWS_PROXY
+          IntegrationHttpMethod: POST
+          Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetAthletesLambda.Arn}/invocations"
 
-  GetAthletesLambdaPermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      FunctionName: !GetAtt GetAthletesLambda.Arn
-      Action: lambda:InvokeFunction
-      Principal: apigateway.amazonaws.com
-      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestApi}/*/GET/athletes/{id}"
+    GetAthletesLambdaPermission:
+      Type: AWS::Lambda::Permission
+      Properties:
+        FunctionName: !GetAtt GetAthletesLambda.Arn
+        Action: lambda:InvokeFunction
+        Principal: apigateway.amazonaws.com
+        SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestApi}/*/GET/athletes/{id}"
 
-  GetAllAthletes:
-    Type: AWS::Lambda::Function
-    Properties:
-      FunctionName: Pokedex-GetAllPokemon
-      PackageType: Image
-      Code:
-        ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ImageName}"
-      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
-      Timeout: 60
-      MemorySize: 256
-      Architectures:
-        - x86_64
-      Environment:
-        Variables:
-          TABLE_NAME: !Ref DBDynamoName
-      ImageConfig:
-        Command: ["app.GetAllAthletes.handler"]
+    GetAllAthletes:
+      Type: AWS::Lambda::Function
+      Properties:
+        FunctionName: GetAllAthletes
+        PackageType: Image
+        Code:
+          ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ImageName}"
+        Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
+        Timeout: 60
+        MemorySize: 256
+        Architectures:
+          - x86_64
+        Environment:
+          Variables:
+            TABLE_NAME: !Ref DBDynamoName
+        ImageConfig:
+          Command: ["app.GetAllAthletes.handler"]
 
-  GetAllRestApiMethod:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      RestApiId: !Ref RestApi
-      ResourceId: !Ref AthletesResource
-      HttpMethod: GET
-      AuthorizationType: NONE
-      ApiKeyRequired: true
-      Integration:
-        Type: AWS_PROXY
-        IntegrationHttpMethod: POST
-        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetAllAthletes.Arn}/invocations"
+    GetAllRestApiMethod:
+      Type: AWS::ApiGateway::Method
+      Properties:
+        RestApiId: !Ref RestApi
+        ResourceId: !Ref AthletesResource
+        HttpMethod: GET
+        AuthorizationType: NONE
+        ApiKeyRequired: true
+        Integration:
+          Type: AWS_PROXY
+          IntegrationHttpMethod: POST
+          Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetAllAthletes.Arn}/invocations"
 
-  GetAllAthletesPermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      FunctionName: !GetAtt GetAllAthletes.Arn
-      Action: lambda:InvokeFunction
-      Principal: apigateway.amazonaws.com
-      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestApi}/*/GET/athletes"
+    GetAllAthletesPermission:
+      Type: AWS::Lambda::Permission
+      Properties:
+        FunctionName: !GetAtt GetAllAthletes.Arn
+        Action: lambda:InvokeFunction
+        Principal: apigateway.amazonaws.com
+        SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestApi}/*/GET/athletes"
 
-  UpdateAthleteLambda:
-    Type: AWS::Lambda::Function
-    Properties:
-      FunctionName: UpdateAthlete
-      PackageType: Image
-      Code:
-        ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ImageName}"
-      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
-      Timeout: 60
-      MemorySize: 256
-      Architectures:
-        - x86_64
-      Environment:
-        Variables:
-          TABLE_NAME: !Ref DBDynamoName
-      ImageConfig:
-        Command: ["app.UpdateAthlete.handler"]
+    UpdateAthleteLambda:
+      Type: AWS::Lambda::Function
+      Properties:
+        FunctionName: UpdateAthlete
+        PackageType: Image
+        Code:
+          ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ImageName}"
+        Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
+        Timeout: 60
+        MemorySize: 256
+        Architectures:
+          - x86_64
+        Environment:
+          Variables:
+            TABLE_NAME: !Ref DBDynamoName
+        ImageConfig:
+          Command: ["app.UpdateAthlete.handler"]
 
-  UpdateRestApiMethod:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      RestApiId: !Ref RestApi
-      ResourceId: !Ref AthleteIdResource
-      HttpMethod: PUT
-      AuthorizationType: NONE
-      ApiKeyRequired: true
-      Integration:
-        Type: AWS_PROXY
-        IntegrationHttpMethod: POST
-        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UpdateAthleteLambda.Arn}/invocations"
+    UpdateRestApiMethod:
+      Type: AWS::ApiGateway::Method
+      Properties:
+        RestApiId: !Ref RestApi
+        ResourceId: !Ref AthleteIdResource
+        HttpMethod: PUT
+        AuthorizationType: NONE
+        ApiKeyRequired: true
+        Integration:
+          Type: AWS_PROXY
+          IntegrationHttpMethod: POST
+          Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UpdateAthleteLambda.Arn}/invocations"
 
-  UpdateAthleteLambdaPermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      FunctionName: !GetAtt UpdateAthleteLambda.Arn
-      Action: lambda:InvokeFunction
-      Principal: apigateway.amazonaws.com
-      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestApi}/*/PUT/athletes/{id}"
+    UpdateAthleteLambdaPermission:
+      Type: AWS::Lambda::Permission
+      Properties:
+        FunctionName: !GetAtt UpdateAthleteLambda.Arn
+        Action: lambda:InvokeFunction
+        Principal: apigateway.amazonaws.com
+        SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestApi}/*/PUT/athletes/{id}"
 
-  DeleteAthleteLambda:
-    Type: AWS::Lambda::Function
-    Properties:
-      FunctionName: DeleteAthlete
-      PackageType: Image
-      Code:
-        ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ImageName}"
-      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
-      Timeout: 60
-      MemorySize: 256
-      Architectures:
-        - x86_64
-      Environment:
-        Variables:
-          TABLE_NAME: !Ref DBDynamoName
-      ImageConfig:
-        Command: ["app.DeleteAthlete.handler"]
+    DeleteAthleteLambda:
+      Type: AWS::Lambda::Function
+      Properties:
+        FunctionName: DeleteAthlete
+        PackageType: Image
+        Code:
+          ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ImageName}"
+        Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
+        Timeout: 60
+        MemorySize: 256
+        Architectures:
+          - x86_64
+        Environment:
+          Variables:
+            TABLE_NAME: !Ref DBDynamoName
+        ImageConfig:
+          Command: ["app.DeleteAthlete.handler"]
 
-  DeleteRestApiMethod:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      RestApiId: !Ref RestApi
-      ResourceId: !Ref AthleteIdResource
-      HttpMethod: DELETE
-      AuthorizationType: NONE
-      ApiKeyRequired: true
-      Integration:
-        Type: AWS_PROXY
-        IntegrationHttpMethod: POST
-        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DeleteAthleteLambda.Arn}/invocations"
+    DeleteRestApiMethod:
+      Type: AWS::ApiGateway::Method
+      Properties:
+        RestApiId: !Ref RestApi
+        ResourceId: !Ref AthleteIdResource
+        HttpMethod: DELETE
+        AuthorizationType: NONE
+        ApiKeyRequired: true
+        Integration:
+          Type: AWS_PROXY
+          IntegrationHttpMethod: POST
+          Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DeleteAthleteLambda.Arn}/invocations"
 
-  DeleteAthleteLambdaPermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      FunctionName: !GetAtt DeleteAthleteLambda.Arn
-      Action: lambda:InvokeFunction
-      Principal: apigateway.amazonaws.com
-      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestApi}/*/DELETE/athletes/{id}"
+    DeleteAthleteLambdaPermission:
+      Type: AWS::Lambda::Permission
+      Properties:
+        FunctionName: !GetAtt DeleteAthleteLambda.Arn
+        Action: lambda:InvokeFunction
+        Principal: apigateway.amazonaws.com
+        SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestApi}/*/DELETE/athletes/{id}"
 
-  OptionsAthleteMethod:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      RestApiId: !Ref RestApi
-      ResourceId: !Ref AthletesResource
-      HttpMethod: OPTIONS
-      AuthorizationType: NONE
-      ApiKeyRequired: false 
-      Integration:
-        Type: MOCK
-        RequestTemplates:
-          application/json: '{"statusCode": 200}'
-        IntegrationResponses:
+    OptionsAthleteMethod:
+      Type: AWS::ApiGateway::Method
+      Properties:
+        RestApiId: !Ref RestApi
+        ResourceId: !Ref AthletesResource
+        HttpMethod: OPTIONS
+        AuthorizationType: NONE
+        ApiKeyRequired: false 
+        Integration:
+          Type: MOCK
+          RequestTemplates:
+            application/json: '{"statusCode": 200}'
+          IntegrationResponses:
+            - StatusCode: "200"
+              ResponseParameters:
+                method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+                method.response.header.Access-Control-Allow-Methods: "'POST,GET,PUT,DELETE,OPTIONS'"
+                method.response.header.Access-Control-Allow-Origin: "'*'"
+              ResponseTemplates:
+                application/json: ''
+        MethodResponses:
           - StatusCode: "200"
             ResponseParameters:
-              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-              method.response.header.Access-Control-Allow-Methods: "'POST,GET,PUT,DELETE,OPTIONS'"
-              method.response.header.Access-Control-Allow-Origin: "'*'"
-            ResponseTemplates:
-              application/json: ''
-      MethodResponses:
-        - StatusCode: "200"
-          ResponseParameters:
-            method.response.header.Access-Control-Allow-Headers: true
-            method.response.header.Access-Control-Allow-Methods: true
-            method.response.header.Access-Control-Allow-Origin: true
+              method.response.header.Access-Control-Allow-Headers: true
+              method.response.header.Access-Control-Allow-Methods: true
+              method.response.header.Access-Control-Allow-Origin: true
 
-  OptionsAthletesdMethod:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      RestApiId: !Ref RestApi
-      ResourceId: !Ref AthleteIdResource
-      HttpMethod: OPTIONS
-      AuthorizationType: NONE
-      ApiKeyRequired: false
-      Integration:
-        Type: MOCK
-        RequestTemplates:
-          application/json: '{"statusCode": 200}'
-        IntegrationResponses:
+    OptionsAthletesdMethod:
+      Type: AWS::ApiGateway::Method
+      Properties:
+        RestApiId: !Ref RestApi
+        ResourceId: !Ref AthleteIdResource
+        HttpMethod: OPTIONS
+        AuthorizationType: NONE
+        ApiKeyRequired: false
+        Integration:
+          Type: MOCK
+          RequestTemplates:
+            application/json: '{"statusCode": 200}'
+          IntegrationResponses:
+            - StatusCode: "200"
+              ResponseParameters:
+                method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+                method.response.header.Access-Control-Allow-Methods: "'POST,GET,PUT,DELETE,OPTIONS'"
+                method.response.header.Access-Control-Allow-Origin: "'*'"
+              ResponseTemplates:
+                application/json: ''
+        MethodResponses:
           - StatusCode: "200"
             ResponseParameters:
-              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-              method.response.header.Access-Control-Allow-Methods: "'POST,GET,PUT,DELETE,OPTIONS'"
-              method.response.header.Access-Control-Allow-Origin: "'*'"
-            ResponseTemplates:
-              application/json: ''
-      MethodResponses:
-        - StatusCode: "200"
-          ResponseParameters:
-            method.response.header.Access-Control-Allow-Headers: true
-            method.response.header.Access-Control-Allow-Methods: true
-            method.response.header.Access-Control-Allow-Origin: true
+              method.response.header.Access-Control-Allow-Headers: true
+              method.response.header.Access-Control-Allow-Methods: true
+              method.response.header.Access-Control-Allow-Origin: true
 
-  ApiDeployment:
-    Type: AWS::ApiGateway::Deployment
-    DependsOn: 
-      - CreateAthleteApiMethod
-      - GetRestApiMethod
-      - GetAllRestApiMethod
-      - UpdateRestApiMethod
-      - DeleteRestApiMethod
-      - OptionsAthleteMethod
-      - OptionsAthletesdMethod
-    Properties:
-      RestApiId: !Ref RestApi
+    ApiDeployment:
+      Type: AWS::ApiGateway::Deployment
+      DependsOn: 
+        - CreateAthleteApiMethod
+        - GetRestApiMethod
+        - GetAllRestApiMethod
+        - UpdateRestApiMethod
+        - DeleteRestApiMethod
+        - OptionsAthleteMethod
+        - OptionsAthletesdMethod
+      Properties:
+        RestApiId: !Ref RestApi
 
-  ApiStage:
-    Type: AWS::ApiGateway::Stage
-    Properties:
-      RestApiId: !Ref RestApi
-      DeploymentId: !Ref ApiDeployment
-      StageName: Prod
-            
-  ApiKey:
-    Type: AWS::ApiGateway::ApiKey
-    Properties:
-      Name: athletes-lambda-api-key
-      Enabled: true
+    ApiStage:
+      Type: AWS::ApiGateway::Stage
+      Properties:
+        RestApiId: !Ref RestApi
+        DeploymentId: !Ref ApiDeployment
+        StageName: Prod
+              
+    ApiKey:
+      Type: AWS::ApiGateway::ApiKey
+      Properties:
+        Name: athletes-lambda-api-key
+        Enabled: true
 
-  UsagePlan:
-    Type: AWS::ApiGateway::UsagePlan
-    Properties:
-      UsagePlanName: athletes-lambda-usage-plan
-      ApiStages:
-        - ApiId: !Ref RestApi
-          Stage: !Ref ApiStage
+    UsagePlan:
+      Type: AWS::ApiGateway::UsagePlan
+      Properties:
+        UsagePlanName: athletes-lambda-usage-plan
+        ApiStages:
+          - ApiId: !Ref RestApi
+            Stage: !Ref ApiStage
 
-  UsagePlanKey:
-    Type: AWS::ApiGateway::UsagePlanKey
-    Properties:
-      KeyId: !Ref ApiKey
-      KeyType: API_KEY
-      UsagePlanId: !Ref UsagePlan
+    UsagePlanKey:
+      Type: AWS::ApiGateway::UsagePlanKey
+      Properties:
+        KeyId: !Ref ApiKey
+        KeyType: API_KEY
+        UsagePlanId: !Ref UsagePlan
 
-Outputs:
-  LambdaAPIEndpoint:
-    Description: "Endpoint público de la API Lambda (arquitectura desacoplada)"
-    Value: !Sub "https://${RestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/athletes"
-    Export:
-      Name: LambdaAPIEndpoint
+  Outputs:
+    LambdaAPIEndpoint:
+      Description: "Endpoint público de la API Lambda (arquitectura desacoplada)"
+      Value: !Sub "https://${RestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/athletes"
+      Export:
+        Name: LambdaAPIEndpoint
 
-  ApiKeyValue:
-    Description: "Valor de la API Key para consumir la API"
-    Value: !Ref ApiKey
-    Export:
-      Name: LambdaAPIKey
+    ApiKeyValue:
+      Description: "Valor de la API Key para consumir la API"
+      Value: !Ref ApiKey
+      Export:
+        Name: LambdaAPIKey

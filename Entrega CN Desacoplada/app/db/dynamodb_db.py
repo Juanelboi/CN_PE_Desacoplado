@@ -1,8 +1,8 @@
 import boto3
 from botocore.exceptions import ClientError
 from typing import List, Optional
-from app.db.db import Database
-from app.model.athlete import Athlete
+from db.db import Database
+from model.athlete import Athlete
 import os
 
 class DynamoDBDatabase(Database):
