@@ -1,0 +1,33 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "ECR repository para las imágenes de Pokedex Lambda"
+
+Parameters:
+  RepositoryName:
+    Type: String
+    Default: pokedex-lambda-image
+    Description: Nombre del repositorio ECR (solo letras minúsculas, números, guiones)
+
+Resources:
+  ECRRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Ref RepositoryName
+      ImageScanningConfiguration:
+        ScanOnPush: false
+      LifecyclePolicy:
+        # --- CORRECCIÓN ---
+        # El JSON debe estar en una sola línea
+        LifecyclePolicyText: '{"rules":[{"rulePriority":1,"description":"Mantener últimas 2 imágenes de pokedex","selection":{"tagStatus":"any","countType":"imageCountMoreThan","countNumber":2},"action":{"type":"expire"}}]}'
+
+Outputs:
+  RepositoryUri:
+    Description: URI del repositorio ECR (usar para docker tag & push)
+    Value: !GetAtt ECRRepository.RepositoryUri
+
+  RepositoryName:
+    Description: Nombre del repositorio
+    Value: !Ref RepositoryName
+
+  RepositoryArn:
+    Description: ARN del repositorio
+    Value: !GetAtt ECRRepository.Arn

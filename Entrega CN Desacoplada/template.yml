@@ -1,0 +1,362 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  API Pokedex (Desacoplada) con Lambda+Docker y API Key [USA LabRole]
+  (Versión Pura de CloudFormation)
+
+Parameters:
+  ImageName:
+    Type: String
+    Description: "El nombre de la imagen en ECR (ej: pokedex-lambda-image:latest)"
+    Default: "pokedex-lambda-image:latest"
+  TableName:
+    Type: String
+    Default: "PokemonPokedexTable-Lambda"
+
+Resources:
+  # 1. La Base de Datos
+  PokemonTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Ref TableName
+      AttributeDefinitions:
+        - AttributeName: pokedex_id
+          AttributeType: N
+      KeySchema:
+        - AttributeName: pokedex_id
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+
+  # 2. El API Gateway
+  PokemonApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: Pokedex-Lambda-API
+      EndpointConfiguration:
+        Types: [REGIONAL]
+
+  # --- Recursos (Paths) ---
+  PokemonResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref PokemonApi
+      ParentId: !GetAtt PokemonApi.RootResourceId
+      PathPart: "pokemon"
+
+  PokemonIdResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref PokemonApi
+      ParentId: !Ref PokemonResource
+      PathPart: "{id}"
+
+  # --- 1. CREATE (POST /pokemon) ---
+  CreatePokemonLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: Pokedex-CreatePokemon
+      PackageType: Image
+      Code:
+        ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ImageName}"
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
+      Timeout: 60
+      MemorySize: 256
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref TableName
+      ImageConfig:
+        Command: ["app.CreatePokemon.handler"]
+
+  CreatePokemonApiMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref PokemonApi
+      ResourceId: !Ref PokemonResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      ApiKeyRequired: true
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CreatePokemonLambda.Arn}/invocations"
+
+  CreatePokemonLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt CreatePokemonLambda.Arn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${PokemonApi}/*/POST/pokemon"
+
+  # --- 2. GET BY ID (GET /pokemon/{id}) ---
+  GetPokemonLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: Pokedex-GetPokemonById
+      PackageType: Image
+      Code:
+        ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ImageName}"
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
+      Timeout: 60
+      MemorySize: 256
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref TableName
+      ImageConfig:
+        Command: ["app.GetPokemon.handler"]
+
+  GetPokemonApiMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref PokemonApi
+      ResourceId: !Ref PokemonIdResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      ApiKeyRequired: true
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetPokemonLambda.Arn}/invocations"
+
+  GetPokemonLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt GetPokemonLambda.Arn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${PokemonApi}/*/GET/pokemon/{id}"
+
+  # --- 3. GET ALL (GET /pokemon) ---
+  GetAllPokemonLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: Pokedex-GetAllPokemon
+      PackageType: Image
+      Code:
+        ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ImageName}"
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
+      Timeout: 60
+      MemorySize: 256
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref TableName
+      ImageConfig:
+        Command: ["app.GetAllPokemon.handler"]
+
+  GetAllPokemonApiMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref PokemonApi
+      ResourceId: !Ref PokemonResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      ApiKeyRequired: true
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetAllPokemonLambda.Arn}/invocations"
+
+  GetAllPokemonLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt GetAllPokemonLambda.Arn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${PokemonApi}/*/GET/pokemon"
+
+  # --- 4. UPDATE (PUT /pokemon/{id}) ---
+  UpdatePokemonLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: Pokedex-UpdatePokemon
+      PackageType: Image
+      Code:
+        ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ImageName}"
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
+      Timeout: 60
+      MemorySize: 256
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref TableName
+      ImageConfig:
+        Command: ["app.UpdatePokemon.handler"]
+
+  UpdatePokemonApiMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref PokemonApi
+      ResourceId: !Ref PokemonIdResource
+      HttpMethod: PUT
+      AuthorizationType: NONE
+      ApiKeyRequired: true
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UpdatePokemonLambda.Arn}/invocations"
+
+  UpdatePokemonLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt UpdatePokemonLambda.Arn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${PokemonApi}/*/PUT/pokemon/{id}"
+
+  # --- 5. DELETE (DELETE /pokemon/{id}) ---
+  DeletePokemonLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: Pokedex-DeletePokemon
+      PackageType: Image
+      Code:
+        ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ImageName}"
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
+      Timeout: 60
+      MemorySize: 256
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref TableName
+      ImageConfig:
+        Command: ["app.DeletePokemon.handler"]
+
+  DeletePokemonApiMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref PokemonApi
+      ResourceId: !Ref PokemonIdResource
+      HttpMethod: DELETE
+      AuthorizationType: NONE
+      ApiKeyRequired: true
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DeletePokemonLambda.Arn}/invocations"
+
+  DeletePokemonLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt DeletePokemonLambda.Arn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${PokemonApi}/*/DELETE/pokemon/{id}"
+
+  # --- 6. OPTIONS (CORS Preflight /pokemon) ---
+  OptionsPokemonMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref PokemonApi
+      ResourceId: !Ref PokemonResource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      ApiKeyRequired: false 
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+          - StatusCode: "200"
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Methods: "'POST,GET,PUT,DELETE,OPTIONS'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+            ResponseTemplates:
+              application/json: ''
+      MethodResponses:
+        - StatusCode: "200"
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Allow-Origin: true
+
+  # --- 7. OPTIONS (CORS Preflight /pokemon/{id}) ---
+  OptionsPokemonIdMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref PokemonApi
+      ResourceId: !Ref PokemonIdResource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      ApiKeyRequired: false
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+          - StatusCode: "200"
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Methods: "'POST,GET,PUT,DELETE,OPTIONS'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+            ResponseTemplates:
+              application/json: ''
+      MethodResponses:
+        - StatusCode: "200"
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Allow-Origin: true
+
+  # --- Despliegue de API ---
+  ApiDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn: 
+      - CreatePokemonApiMethod
+      - GetPokemonApiMethod
+      - GetAllPokemonApiMethod
+      - UpdatePokemonApiMethod
+      - DeletePokemonApiMethod
+      - OptionsPokemonMethod
+      - OptionsPokemonIdMethod
+    Properties:
+      RestApiId: !Ref PokemonApi
+
+  ApiStage:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      RestApiId: !Ref PokemonApi
+      DeploymentId: !Ref ApiDeployment
+      StageName: Prod
+            
+  # --- Seguridad (API Key) ---
+  ApiKey:
+    Type: AWS::ApiGateway::ApiKey
+    Properties:
+      Name: pokedex-lambda-api-key
+      Enabled: true
+
+  UsagePlan:
+    Type: AWS::ApiGateway::UsagePlan
+    Properties:
+      UsagePlanName: pokedex-lambda-usage-plan
+      ApiStages:
+        - ApiId: !Ref PokemonApi
+          Stage: !Ref ApiStage
+
+  UsagePlanKey:
+    Type: AWS::ApiGateway::UsagePlanKey
+    Properties:
+      KeyId: !Ref ApiKey
+      KeyType: API_KEY
+      UsagePlanId: !Ref UsagePlan
+
+Outputs:
+  LambdaAPIEndpoint:
+    Description: "Endpoint público de la API Lambda (arquitectura desacoplada)"
+    Value: !Sub "https://${PokemonApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/pokemon"
+    Export:
+      Name: LambdaAPIEndpoint
+
+  ApiKeyValue:
+    Description: "Valor de la API Key para consumir la API"
+    Value: !Ref ApiKey
+    Export:
+      Name: LambdaAPIKey
